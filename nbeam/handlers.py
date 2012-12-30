@@ -1,4 +1,5 @@
 import os
+import base64
 import json
 
 from tornado.web import RequestHandler
@@ -36,7 +37,7 @@ class MainHandler (RequestHandler):
     
     rdata = self.get_argument("request", '')
     try:
-      #do cmd line sanity/base64 check
+      test = base64.decodestring(rdata)
       rdata = self.aes.decrypt(rdata)
       rdata = json_decode(rdata)
       
