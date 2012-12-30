@@ -16,6 +16,8 @@ from tornado.ioloop import IOLoop
 from tornado.web import Application
 from tornado.options import options, enable_pretty_logging
 
+from .version import VERSION
+
 try:
   import daemon
   
@@ -97,8 +99,9 @@ def commander ():
   if os.environ.has_key('HOME'):
     config_default = os.path.join(os.environ['HOME'], '.config', 'nbeam')
     
+  cmd_help = "start, stop, restart, status, config (print config), newkey (generate new key)"
   parser = argparse.ArgumentParser(description='Neutron Beam, client to access local files in Neutron Drive.')
-  parser.add_argument('command', metavar='command', nargs=1, choices=('start', 'stop', 'restart', 'status'), help="start|stop|restart|status")
+  parser.add_argument('command', metavar='command', nargs=1, choices=('start', 'stop', 'restart', 'status', 'config', 'newkey'), help=cmd_help)
   parser.add_argument('-c', '--config', dest='config', default=config_default, help='Config directory path, default: ' + config_default)
   parser.add_argument('-p', '--port', dest='port', type=int, default=None, help='Network port to run client on. Default: 32811')
   parser.add_argument('-f', dest='foreground', action='store_true', default=False, help='Run in the foreground instead of a daemon.')
@@ -129,7 +132,7 @@ def commander ():
     if not os.path.exists(config['dir']):
       os.makedirs(config['dir'])
       
-  if not config['key']:
+  if not config['key'] or args.command[0] == 'newkey':
     config['key'] = generate_key()
     fh = open(cpath, 'w')
     json.dump(config, fh, sort_keys=True, indent=2)
@@ -138,6 +141,9 @@ def commander ():
     print "Generated Key:", config['key']
     print "Client port:", config['port']
     
+    if args.command[0] == 'newkey':
+      return 0
+      
   if args.foreground:
     config['daemon'] = False
     
@@ -153,6 +159,11 @@ def commander ():
   config['pid'] = os.path.join(args.config, 'nbeam.pid')
   config['log'] = os.path.join(args.config, 'nbeam.log')
   
+  if args.command[0] == 'config':
+    print 'Config Directory: %s' % args.config
+    print json.dumps(config, sort_keys=True, indent=2)
+    return 0
+    
   if args.command[0] == 'status':
     fh = open(config['pid'], 'r')
     pid = int(fh.read())
@@ -182,6 +193,7 @@ def commander ():
         run_server(config)
       
     else:
-      print 'Starting Neutron Beam ...'
+      str_v = [str(i) for i in VERSION]
+      print 'Starting Neutron Beam V%s ...' % '.'.join(str_v)
       run_server(config)
       
