@@ -4,7 +4,7 @@ import base64
 import hashlib
 import warnings
 from StringIO import StringIO
-from Crypto.Cipher import AES
+#from Crypto.Cipher import AES
 from .version import VERSION
 from .exceptions import EncryptionError, DecryptionError
 

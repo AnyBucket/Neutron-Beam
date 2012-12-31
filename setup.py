@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "neutron-beam",
-    version = '12.12.1',
+    version = '12.12.2',
     description = "Client to beam files to and from Neutron Drive.",
     url = "https://github.com/pizzapanther/Neutron-Beam",
     author = "Paul Bailey",

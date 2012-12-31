@@ -161,6 +161,7 @@ def commander ():
   
   if args.command[0] == 'config':
     print 'Config Directory: %s' % args.config
+    print 'Config File: %s' % cpath
     print json.dumps(config, sort_keys=True, indent=2)
     return 0
     
