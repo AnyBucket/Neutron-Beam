@@ -37,6 +37,28 @@ def mimetype (fp):
     
   return mt
   
+def rename_file (config, rdata):
+  fp = config['dir'] + rdata['file']
+  fid = hashstr(config['key'] + rdata['file'])
+  
+  parent = os.path.dirname(rdata['file'])
+  new_rel_path = os.path.join(parent, rdata['name'])
+  new_path = config['dir'] + new_rel_path
+  os.rename(fp, new_path)
+  
+  if parent == '/':
+    parents = [rdata['beam']]
+    
+  else:
+    parents = ['#dir_' + hashstr(config['key'] + parent)]
+    
+  new_id = hashstr(config['key'] + new_rel_path)
+  ext = os.path.splitext(new_rel_path)[1]
+  if ext and ext.startswith('.'):
+    ext = ext[1:]
+    
+  return {'status': 'ok', 'file_id': fid, 'new_id': new_id, 'rel': new_rel_path, 'parents': parents, 'name': rdata['name'], 'ext': ext}
+  
 def save_file (config, rdata):
   fp = config['dir'] + rdata['file']
   fid = hashstr(config['key'] + rdata['file'])
@@ -115,7 +137,7 @@ def list_dir (config, rdata):
         
   for d in dirs:
     did = hashstr(config['key'] + d[0])
-    r.append('<li class="directory collapsed" id="%s" title="%s/"><a href="#" onclick="hide_right_menu()" data-beam="%s" rel="%s/">%s</a></li>' % (did, d[0], rdata['beam'], d[0], d[1]))
+    r.append('<li class="directory collapsed" id="dir_%s" title="%s/"><a href="#" onclick="hide_right_menu()" data-beam="%s" rel="%s/">%s</a></li>' % (did, d[0], rdata['beam'], d[0], d[1]))
     
   for f in files:
     fid = hashstr(config['key'] + f[1])

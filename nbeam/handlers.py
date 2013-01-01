@@ -6,13 +6,18 @@ from tornado.web import RequestHandler
 from tornado.escape import json_encode, json_decode
 
 from .SimpleAES import SimpleAES
-from .views  import list_dir, open_file, save_file
+from .views  import list_dir, open_file, save_file, rename_file
 
 class MainHandler (RequestHandler):
   def __init__ (self, *args, **kwargs):
     self.config = args[0].config
     self.aes = SimpleAES(args[0].config['key'])
-    self.ALLOWED_TASKS = ('list', 'open', 'save')
+    self.ALLOWED_TASKS = {
+      'list': list_dir,
+      'open': open_file,
+      'save': save_file,
+      'rename': rename_file,
+    }
     super(MainHandler, self).__init__(*args, **kwargs)
     
   def valid_request (self, rdata):
@@ -46,15 +51,8 @@ class MainHandler (RequestHandler):
     
     else:
       if self.valid_request(rdata):
-        if rdata['task'] == 'list':
-          response_data = list_dir(self.config, rdata)
-          
-        elif rdata['task'] == 'open':
-          response_data = open_file(self.config, rdata)
-          
-        elif rdata['task'] == 'save':
-          response_data = save_file(self.config, rdata)
-          
+        response_data = self.ALLOWED_TASKS[rdata['task']](self.config, rdata)
+        
         data = {
           'response': response_data,
           'email': self.config['email'],
