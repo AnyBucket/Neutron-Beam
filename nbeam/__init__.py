@@ -1,5 +1,5 @@
 from .handlers import MainHandler
 from .run import run_server, commander
-from .version import VERSION
+from .version import VERSION_STRING
 
-__version__ = VERSION
+__version__ = VERSION_STRING

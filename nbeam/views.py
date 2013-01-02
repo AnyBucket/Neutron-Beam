@@ -1,4 +1,5 @@
 import os
+import shutil
 import codecs
 import string
 import hashlib
@@ -36,6 +37,16 @@ def mimetype (fp):
     mt = 'application/octet-stream'
     
   return mt
+  
+def delete (config, rdata):
+  fp = config['dir'] + rdata['file']
+  if os.path.isdir(fp):
+    shutil.rmtree(path)
+    
+  else:
+    os.remove(fp)
+    
+  return {'status': 'ok', 'fid': rdata['fid']}
   
 def rename_file (config, rdata):
   fp = config['dir'] + rdata['file']
@@ -141,7 +152,10 @@ def list_dir (config, rdata):
     
   for f in files:
     fid = hashstr(config['key'] + f[1])
-    r.append('<li class="file ext_%s" title="%s"><a href="#" onclick="hide_right_menu()" rel="%s" data-beam="%s" data-rel="%s">%s</a></li>' % (f[0], f[1], fid, rdata['beam'], f[1], f[2]))
+    r.append(
+      '<li class="file ext_%s" title="%s"><a href="#" data-title="%s" rel="%s" data-beam="%s" data-rel="%s" onclick="hide_right_menu()" oncontextmenu="return beam_right_menu(event, \'file\', \'%s\')">%s</a></li>' % 
+      (f[0], f[1], f[2], fid, rdata['beam'], f[1], fid, f[2])
+    )
     
   r.append('</ul>')
   return ''.join(r)

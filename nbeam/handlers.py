@@ -6,7 +6,8 @@ from tornado.web import RequestHandler
 from tornado.escape import json_encode, json_decode
 
 from .SimpleAES import SimpleAES
-from .views  import list_dir, open_file, save_file, rename_file
+from .views  import list_dir, open_file, save_file, rename_file, delete
+from .version import VERSION_STRING
 
 class MainHandler (RequestHandler):
   def __init__ (self, *args, **kwargs):
@@ -17,6 +18,7 @@ class MainHandler (RequestHandler):
       'open': open_file,
       'save': save_file,
       'rename': rename_file,
+      'delete': delete,
     }
     super(MainHandler, self).__init__(*args, **kwargs)
     
@@ -62,7 +64,8 @@ class MainHandler (RequestHandler):
         data = {
           'encrypted': self.aes.encrypt(j),
           'beam': rdata['beam'],
-          'status': 'ok'
+          'status': 'ok',
+          'version': VERSION_STRING,
         }
         
     j = json_encode(data)

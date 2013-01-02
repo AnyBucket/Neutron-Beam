@@ -16,7 +16,7 @@ from tornado.ioloop import IOLoop
 from tornado.web import Application
 from tornado.options import options, enable_pretty_logging
 
-from .version import VERSION
+from .version import VERSION_STRING
 
 try:
   import daemon
@@ -194,7 +194,6 @@ def commander ():
         run_server(config)
       
     else:
-      str_v = [str(i) for i in VERSION]
-      print 'Starting Neutron Beam V%s ...' % '.'.join(str_v)
+      print 'Starting Neutron Beam V%s ...' % VERSION_STRING
       run_server(config)
       
