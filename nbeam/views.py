@@ -9,9 +9,13 @@ mimetypes.init()
 text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
 _null_trans = string.maketrans("", "")
 
-def hashstr (value):
+def hashstr (value, ftype=None):
   value = '::NeutronBeam::' + value
-  return hashlib.sha256(value).hexdigest()
+  ret = hashlib.sha256(value).hexdigest()
+  if ftype == 'dir':
+    ret += '/'
+    
+  return ret
   
 def istext (s):
   if "\0" in s:
@@ -41,7 +45,7 @@ def mimetype (fp):
 def delete (config, rdata):
   fp = config['dir'] + rdata['file']
   if os.path.isdir(fp):
-    shutil.rmtree(path)
+    shutil.rmtree(fp)
     
   else:
     os.remove(fp)
@@ -52,7 +56,12 @@ def rename_file (config, rdata):
   fp = config['dir'] + rdata['file']
   fid = hashstr(config['key'] + rdata['file'])
   
-  parent = os.path.dirname(rdata['file'])
+  if os.path.isdir(fp):
+    parent = os.path.dirname(rdata['file'][:-1])
+    
+  else:
+    parent = os.path.dirname(rdata['file'])
+    
   new_rel_path = os.path.join(parent, rdata['name'])
   new_path = config['dir'] + new_rel_path
   os.rename(fp, new_path)
@@ -147,8 +156,11 @@ def list_dir (config, rdata):
         files.append((e,rf,f))
         
   for d in dirs:
-    did = hashstr(config['key'] + d[0])
-    r.append('<li class="directory collapsed" id="dir_%s" title="%s/"><a href="#" onclick="hide_right_menu()" data-beam="%s" rel="%s/">%s</a></li>' % (did, d[0], rdata['beam'], d[0], d[1]))
+    did = hashstr(config['key'] + d[0], 'dir')
+    r.append(
+      '<li class="directory collapsed" id="dir_%s" title="%s/"><a href="#" rel="%s" data-beam="%s" data-title="%s" data-rel="%s/" onclick="hide_right_menu()" oncontextmenu="return beam_right_menu(event, \'dir\', \'%s\')">%s</a></li>' % 
+      (did[:-1], d[0], did, rdata['beam'], d[1], d[0], did, d[1])
+    )
     
   for f in files:
     fid = hashstr(config['key'] + f[1])
