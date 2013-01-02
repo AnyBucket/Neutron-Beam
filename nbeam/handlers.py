@@ -6,7 +6,7 @@ from tornado.web import RequestHandler
 from tornado.escape import json_encode, json_decode
 
 from .SimpleAES import SimpleAES
-from .views  import list_dir, open_file, save_file, rename_file, delete
+from .views  import list_dir, open_file, save_file, rename_file, delete, new_file, new_dir
 from .version import VERSION_STRING
 
 class MainHandler (RequestHandler):
@@ -19,6 +19,8 @@ class MainHandler (RequestHandler):
       'save': save_file,
       'rename': rename_file,
       'delete': delete,
+      'newfile': new_file,
+      'newdir': new_dir,
     }
     super(MainHandler, self).__init__(*args, **kwargs)
     

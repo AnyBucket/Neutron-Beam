@@ -42,6 +42,40 @@ def mimetype (fp):
     
   return mt
   
+def new_dir (config, rdata):
+  return new_file(config, rdata, d=True)
+  
+def new_file (config, rdata, d=False):
+  new_rel = os.path.join(rdata['dir'], rdata['name'])
+  parent = config['dir'] + rdata['dir']
+  fp = os.path.join(parent, rdata['name'])
+  
+  fp = os.path.normpath(fp)
+  if fp.startswith(config['dir']):
+    if os.path.exists(fp):
+      if d:
+        raise Exception("Directory Already Exists")
+        
+      else:
+        raise Exception("File Already Exists")
+        
+    if d:
+      os.mkdir(fp)
+      
+    else:
+      fh = open(fp, 'w')
+      fh.close()
+      
+    if rdata['dir'] == '/':
+      pid = rdata['beam']
+      
+    else:
+      pid = '#dir_' + hashstr(config['key'] + rdata['dir'][:-1])
+      
+    return {'status': 'ok', 'fid': hashstr(config['key'] + new_rel), 'rel': new_rel, 'pid': pid}
+    
+  raise Exception("Invalid File Path")
+  
 def delete (config, rdata):
   fp = config['dir'] + rdata['file']
   if os.path.isdir(fp):
