@@ -6,7 +6,7 @@ from tornado.web import RequestHandler
 from tornado.escape import json_encode, json_decode
 
 from .SimpleAES import SimpleAES
-from .views  import list_dir, open_file, save_file, rename_file, delete, new_file, new_dir
+from .views  import list_dir, open_file, save_file, rename_file, delete, new_file, new_dir, upload_file
 from .version import VERSION_STRING
 
 class MainHandler (RequestHandler):
@@ -21,6 +21,7 @@ class MainHandler (RequestHandler):
       'delete': delete,
       'newfile': new_file,
       'newdir': new_dir,
+      'upload': upload_file,
     }
     super(MainHandler, self).__init__(*args, **kwargs)
     
@@ -38,6 +39,11 @@ class MainHandler (RequestHandler):
           return True
           
     return False
+    
+  def options (self):
+    self.set_header('Access-Control-Allow-Origin', '*')
+    self.set_header('Access-Control-Allow-Headers', 'X-CSRFToken')
+    self.set_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
     
   def post (self):
     data = {'status': 'Invalid Request'}

@@ -189,7 +189,7 @@ def commander ():
       config['daemon'] = False
       
     if config['daemon']:
-      print 'Neutron Beam Started'
+      print 'Neutron Beam Started V%s' % VERSION_STRING
       with daemon.DaemonContext():
         run_server(config)
       

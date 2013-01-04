@@ -4,6 +4,7 @@ import codecs
 import string
 import hashlib
 import mimetypes
+import base64
 
 mimetypes.init()
 text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
@@ -41,6 +42,21 @@ def mimetype (fp):
     mt = 'application/octet-stream'
     
   return mt
+  
+def upload_file (config, rdata):
+  fp = os.path.join(config['dir'] + rdata['dir'], rdata['name'])
+  fp = os.path.normpath(fp)
+  if fp.startswith(config['dir']):
+    if os.path.exists(fp):
+      raise Exception("File Already Exists")
+      
+    fh = open(fp, 'wb')
+    fh.write(base64.decodestring(rdata['content']))
+    fh.close()
+    
+    return {'status': 'ok', 'fid': rdata['fid']}
+    
+  raise Exception("Invalid File Path")
   
 def new_dir (config, rdata):
   return new_file(config, rdata, d=True)
