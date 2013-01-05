@@ -5,6 +5,7 @@ import string
 import hashlib
 import mimetypes
 import base64
+import urllib
 
 mimetypes.init()
 text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
@@ -61,6 +62,9 @@ def upload_file (config, rdata):
 def new_dir (config, rdata):
   return new_file(config, rdata, d=True)
   
+def new_url (config, rdata):
+  return new_file(config, rdata)
+  
 def new_file (config, rdata, d=False):
   new_rel = os.path.join(rdata['dir'], rdata['name'])
   parent = config['dir'] + rdata['dir']
@@ -79,9 +83,13 @@ def new_file (config, rdata, d=False):
       os.mkdir(fp)
       
     else:
-      fh = open(fp, 'w')
-      fh.close()
-      
+      if 'url' in rdata:
+        urllib.urlretrieve(rdata['url'], fp)
+        
+      else:
+        fh = open(fp, 'w')
+        fh.close()
+        
     if rdata['dir'] == '/':
       pid = rdata['beam']
       
