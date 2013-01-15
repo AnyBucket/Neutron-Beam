@@ -16,6 +16,7 @@ class Grep (object):
       line = fh.readline()
       if line:
         if (linenum in rlines):
+          line = unicode(line, 'utf-8', errors='ignore')
           newlines += bytearray(self.needle.sub(rstr, line), 'utf-8')
           
         else:
