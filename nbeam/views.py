@@ -1,49 +1,11 @@
 import os
 import shutil
 import codecs
-import string
-import hashlib
-import mimetypes
 import base64
 import urllib
 
-mimetypes.init()
-text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
-_null_trans = string.maketrans("", "")
+from .utils import istext, hashstr, mimetype
 
-def hashstr (value, ftype=None):
-  value = '::NeutronBeam::' + value
-  ret = hashlib.sha256(value).hexdigest()
-  if ftype == 'dir':
-    ret += '/'
-    
-  return ret
-  
-def istext (s):
-  if "\0" in s:
-    return 0
-
-  if not s:  # Empty files are considered text
-    return 1
-
-  # Get the non-text characters (maps a character to itself then
-  # use the 'remove' option to get rid of the text characters.)
-  t = s.translate(_null_trans, text_characters)
-
-  # If more than 30% non-text characters, then
-  # this is considered a binary file
-  if len(t)/len(s) > 0.30:
-    return 0
-    
-  return 1
-  
-def mimetype (fp):
-  mt, enc = mimetypes.guess_type(fp)
-  if mt is None:
-    mt = 'application/octet-stream'
-    
-  return mt
-  
 def upload_file (config, rdata):
   fp = os.path.join(config['dir'] + rdata['dir'], rdata['name'])
   fp = os.path.normpath(fp)
@@ -193,6 +155,9 @@ def list_dir (config, rdata):
   files = []
   dirs = []
   
+  if 'dirOnly' not in rdata:
+    rdata['dirOnly'] = '0'
+    
   for f in fdlist:
     go = False
     if f.startswith('.'):
@@ -210,16 +175,24 @@ def list_dir (config, rdata):
         dirs.append((rf,f))
         
       else:
-        e = os.path.splitext(f)[1][1:] # get .ext and remove dot
-        files.append((e,rf,f))
-        
+        if rdata['dirOnly'] != '1':
+          e = os.path.splitext(f)[1][1:] # get .ext and remove dot
+          files.append((e,rf,f))
+          
   for d in dirs:
     did = hashstr(config['key'] + d[0], 'dir')
-    r.append(
-      '<li class="directory collapsed" id="dir_%s" title="%s/"><a href="#" rel="%s" data-beam="%s" data-title="%s" data-rel="%s/" onclick="hide_right_menu()" oncontextmenu="return beam_right_menu(event, \'dir\', \'%s\')">%s</a></li>' % 
-      (did[:-1], d[0], did, rdata['beam'], d[1], d[0], did, d[1])
-    )
-    
+    if rdata['dirOnly'] == '1':
+      r.append(
+        '<li class="directory collapsed" title="%s/"><a href="#" rel="%s" data-beam="%s" data-title="%s" data-rel="%s/" onclick="set_sdir_footer(\'%s\')">%s</a></li>' % 
+        (d[0], did, rdata['beam'], d[1], d[0], did, d[1])
+      )
+      
+    else:
+      r.append(
+        '<li class="directory collapsed" id="dir_%s" title="%s/"><a href="#" rel="%s" data-beam="%s" data-title="%s" data-rel="%s/" onclick="hide_right_menu()" oncontextmenu="return beam_right_menu(event, \'dir\', \'%s\')">%s</a></li>' % 
+        (did[:-1], d[0], did, rdata['beam'], d[1], d[0], did, d[1])
+      )
+      
   for f in files:
     fid = hashstr(config['key'] + f[1])
     r.append(

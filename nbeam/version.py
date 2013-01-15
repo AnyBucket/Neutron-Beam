@@ -1,3 +1,3 @@
-VERSION = (13, 3)
+VERSION = (13, 1, 5)
 
 VERSION_STRING = '.'.join([str(i) for i in VERSION])

@@ -7,6 +7,7 @@ from tornado.escape import json_encode, json_decode
 
 from .SimpleAES import SimpleAES
 from .views  import list_dir, open_file, save_file, rename_file, delete, new_file, new_dir, upload_file, new_url
+from .views_search import start_search, start_replace, job_status, cancel_job
 from .version import VERSION_STRING
 
 class MainHandler (RequestHandler):
@@ -23,22 +24,31 @@ class MainHandler (RequestHandler):
       'newdir': new_dir,
       'upload': upload_file,
       'newurl': new_url,
+      'search': start_search,
+      'replace': start_replace,
+      'jobstatus': job_status,
+      'canceljob': cancel_job,
     }
+    
     super(MainHandler, self).__init__(*args, **kwargs)
     
   def valid_request (self, rdata):
     if rdata['task'] in self.ALLOWED_TASKS:
       if rdata['email'].lower() == self.config['email'].lower():
+        path = None
         if 'file' in rdata:
           path = rdata['file']
           
-        else:
+        elif 'dir' in rdata:
           path = rdata['dir']
           
-        path = os.path.normpath(self.config['dir'] + path)
-        if path.startswith(self.config['dir']):
-          return True
-          
+        if path:
+          path = os.path.normpath(self.config['dir'] + path)
+          if path.startswith(self.config['dir']):
+            return True
+            
+        return True
+        
     return False
     
   def options (self):

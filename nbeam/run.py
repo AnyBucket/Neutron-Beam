@@ -9,7 +9,7 @@ import random
 import hashlib
 import logging
 import argparse
-from multiprocessing import Process
+import multiprocessing
 
 import tornado.autoreload
 from tornado.ioloop import IOLoop
@@ -17,14 +17,13 @@ from tornado.web import Application
 from tornado.options import options, enable_pretty_logging
 
 from .version import VERSION_STRING
+from .models import initialize_db
 
 try:
   import daemon
   
 except:
   pass
-
-from .handlers import MainHandler
 
 def started (*args):
   root_logger = logging.getLogger()
@@ -33,6 +32,7 @@ def started (*args):
   logging.info('Neutron Beam Started')
   
 def run_server (config):
+  os.umask(022)
   options.logging = 'debug'
   
   if config['daemon']:
@@ -40,17 +40,37 @@ def run_server (config):
     
   enable_pretty_logging(options=options)
   
+  dbObj = initialize_db(config['db'])
+  config['Job'] = dbObj['JobModel']
+  config['CancelJob'] = dbObj['CancelModel']
+  
+  q = multiprocessing.Queue()
+  config['q'] = q
+  from .worker import Worker
+  w = Worker(q, logging, config)
+  w.start()
+  
+  from .handlers import MainHandler
   app = Application([(r"/", MainHandler)])
   app.config = config
   app.listen(config['port'])
   if config['reload']:
     tornado.autoreload.start()
     
+    class reload_hook (object):
+      def __init__ (self, w):
+        self.w = w
+      def run (self):
+        self.w.terminate()
+        
+    tornado.autoreload.add_reload_hook(reload_hook(w).run)
+    
   fh = open(config['pid'], 'w')
   fh.write('%d' % os.getpid())
   fh.close()
   
   def stopme (s, f):
+    w.terminate()
     loop.stop()
     logging.info('Neutron Beam Stopped')
     
@@ -58,7 +78,15 @@ def run_server (config):
   signal.signal(signal.SIGTERM, stopme)
   
   loop.add_callback(started)
-  loop.start()
+  try:
+    loop.start()
+    
+  except (KeyboardInterrupt, SystemExit):
+    w.terminate()
+    logging.info('Neutron Beam Stopped')
+    
+  finally:
+    raise
   
 def default_config ():
   return {
@@ -94,6 +122,11 @@ def is_running (pid):
   else:
     return True
     
+def dump_config (cpath, config):
+  fh = open(cpath, 'w')
+  json.dump(config, fh, sort_keys=True, indent=2)
+  fh.close()
+  
 def commander ():
   config_default = os.path.join('.config', 'nbeam')
   if os.environ.has_key('HOME'):
@@ -132,11 +165,11 @@ def commander ():
     if not os.path.exists(config['dir']):
       os.makedirs(config['dir'])
       
+    dump_config(cpath, config)
+    
   if not config['key'] or args.command[0] == 'newkey':
     config['key'] = generate_key()
-    fh = open(cpath, 'w')
-    json.dump(config, fh, sort_keys=True, indent=2)
-    fh.close()
+    dump_config (cpath, config)
     
     print "Generated Key:", config['key']
     print "Client port:", config['port']
@@ -158,6 +191,7 @@ def commander ():
     
   config['pid'] = os.path.join(args.config, 'nbeam.pid')
   config['log'] = os.path.join(args.config, 'nbeam.log')
+  config['db'] = os.path.join(args.config, 'nbeam.%s.sql3' % VERSION_STRING)
   
   if args.command[0] == 'config':
     print 'Config Directory: %s' % args.config
