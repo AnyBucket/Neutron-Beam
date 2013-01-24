@@ -50,8 +50,11 @@ def run_server (config):
   w = Worker(q, logging, config)
   w.start()
   
-  from .handlers import MainHandler
-  app = Application([(r"/", MainHandler)])
+  from .handlers import MainHandler, StaticHandler
+  app = Application([
+    (r"/\S+/public/(.*)", StaticHandler, {'path': config['dir']}),
+    (r"/", MainHandler)
+  ])
   app.config = config
   app.listen(config['port'])
   if config['reload']:
@@ -95,6 +98,7 @@ def default_config ():
     'key': '',
     'email': '',
     'dir': '',
+    'view_timeout': 30,
   }
   
 def generate_key ():
@@ -139,6 +143,7 @@ def commander ():
   parser.add_argument('-p', '--port', dest='port', type=int, default=None, help='Network port to run client on. Default: 32811')
   parser.add_argument('-f', dest='foreground', action='store_true', default=False, help='Run in the foreground instead of a daemon.')
   parser.add_argument('-r', dest='reload', action='store_true', default=False, help='Reload on code changes. (For Debugging)')
+  parser.add_argument('-v', '--view', dest='view', type=int, default=None, help='File view session timeout in minutes. Default: 30')
   
   args = parser.parse_args()
   
@@ -147,11 +152,15 @@ def commander ():
     
   cpath = os.path.join(args.config, 'config.json')
   config = default_config()
+  
   if os.path.exists(cpath):
     fh = open(cpath, 'r')
     d = json.load(fh)
     fh.close()
     config.update(d)
+    
+  if args.view is not None:
+    config['view_timeout'] = args.view
     
   if not config['email']:
     config['email'] = raw_input('E-Mail Address: ')

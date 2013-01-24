@@ -1,15 +1,25 @@
 import os
+import re
 import base64
 import json
 
-from tornado.web import RequestHandler
+from tornado.web import RequestHandler, StaticFileHandler, HTTPError
 from tornado.escape import json_encode, json_decode
 
 from .SimpleAES import SimpleAES
-from .views  import list_dir, open_file, save_file, rename_file, delete, new_file, new_dir, upload_file, new_url
+from .views  import list_dir, open_file, save_file, rename_file, delete, new_file, new_dir, upload_file, new_url, token, token_valid
 from .views_search import start_search, start_replace, job_status, cancel_job
 from .version import VERSION_STRING
 
+class StaticHandler (StaticFileHandler):
+  def get (self, path, include_body=True):
+    reobj = re.search('/(\S+)/public/(.*)', self.request.path)
+    token = reobj.group(1)
+    if token_valid(token):
+      return super(StaticHandler, self).get(path, include_body)
+      
+    raise HTTPError(404)
+    
 class MainHandler (RequestHandler):
   def __init__ (self, *args, **kwargs):
     self.config = args[0].config
@@ -28,6 +38,7 @@ class MainHandler (RequestHandler):
       'replace': start_replace,
       'jobstatus': job_status,
       'canceljob': cancel_job,
+      'token': token,
     }
     
     super(MainHandler, self).__init__(*args, **kwargs)
@@ -72,6 +83,7 @@ class MainHandler (RequestHandler):
     
     else:
       if self.valid_request(rdata):
+        rdata['REMOTE_IP'] = self.request.remote_ip
         response_data = self.ALLOWED_TASKS[rdata['task']](self.config, rdata)
         
         data = {

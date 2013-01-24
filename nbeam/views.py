@@ -3,8 +3,37 @@ import shutil
 import codecs
 import base64
 import urllib
+import datetime
+import hashlib
+import random
 
 from .utils import istext, hashstr, mimetype
+
+TOKENS = {}
+
+def token_valid (token):
+  now = datetime.datetime.now()
+  for t in TOKENS.keys():
+    if TOKENS[t]['expires'] < now:
+      del TOKENS[t]
+      
+  if token in TOKENS:
+    return True
+    
+  return False
+  
+def token (config, rdata):
+  token = base64.b64encode(
+    hashlib.sha256( str(random.getrandbits(256)) ).digest(),
+    random.choice(['rA','aZ','gQ','hH','hG','aR','DD'])
+  ).rstrip('==')
+  token = token[:12]
+  
+  TOKENS[token] = {
+    'ip': rdata['ip'],
+    'expires': datetime.datetime.now() + datetime.timedelta(minutes=config['view_timeout'])
+  }
+  return {'status': 'ok', 'token': token}
 
 def upload_file (config, rdata):
   fp = os.path.join(config['dir'] + rdata['dir'], rdata['name'])
