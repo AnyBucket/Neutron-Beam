@@ -88,6 +88,13 @@ def run_server (config):
     w.terminate()
     logging.info('Neutron Beam Stopped')
     
+  finally:
+    try:
+      raise
+    
+    except:
+      pass
+    
 def default_config ():
   return {
     'daemon': True,
