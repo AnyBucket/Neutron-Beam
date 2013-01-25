@@ -88,9 +88,6 @@ def run_server (config):
     w.terminate()
     logging.info('Neutron Beam Stopped')
     
-  finally:
-    raise
-  
 def default_config ():
   return {
     'daemon': True,
@@ -108,8 +105,9 @@ def generate_key ():
   ).rstrip('==')
   
 def send_kill (pid):
+  os.kill(pid, signal.SIGTERM)
+  
   while is_running(pid):
-    os.kill(pid, signal.SIGTERM)
     time.sleep(1)
     
 def is_running (pid):
