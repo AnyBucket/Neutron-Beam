@@ -14,7 +14,8 @@ import multiprocessing
 import tornado.autoreload
 from tornado.ioloop import IOLoop
 from tornado.web import Application
-from tornado.options import options, enable_pretty_logging
+from tornado.options import options
+from tornado.log import enable_pretty_logging
 
 from .version import VERSION_STRING
 from .models import initialize_db
