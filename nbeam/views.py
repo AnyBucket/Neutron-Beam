@@ -128,6 +128,38 @@ def rename_file (config, rdata):
     
   return {'status': 'ok', 'file_id': fid, 'new_id': new_id, 'rel': new_rel_path, 'parents': parents, 'name': rdata['name'], 'ext': ext}
   
+def create_realtime (config, rdata):
+  fp = config['dir'] + rdata['file']
+  File = config['File']
+  try:
+    file_data = File.get(File.path == rdata['file'])
+    
+  except File.DoesNotExist:
+    file_data = File()
+    file_data.path = rdata['file']
+    
+  finally:
+    file_data.realtime_id = rdata['realtime_id']
+    file_data.save()
+    
+  fid = hashstr(config['key'] + rdata['file'])
+  return {'status': 'ok', 'file': rdata['file'], 'fid': fid}
+  
+def stop_realtime (config, rdata):
+  fp = config['dir'] + rdata['file']
+  File = config['File']
+  try:
+    file_data = File.get(File.path == rdata['file'])
+    
+  except File.DoesNotExist:
+    pass
+  
+  else:
+    file_data.delete_instance()
+    
+  fid = hashstr(config['key'] + rdata['file'])
+  return {'status': 'ok', 'file': rdata['file'], 'fid': fid}
+
 def save_file (config, rdata):
   fp = config['dir'] + rdata['file']
   fid = hashstr(config['key'] + rdata['file'])
@@ -172,6 +204,16 @@ def open_file (config, rdata):
     f = {'fileType': 'binary', 'content': '', 'id': fid}
     
   fh.close()
+  File = config['File']
+  try:
+    file_data = File.get(File.path == rdata['file'])
+    
+  except File.DoesNotExist:
+    f['realtime_id'] = None
+    
+  else:
+    f['realtime_id'] = file_data.realtime_id
+    
   return {'file': f, 'read_only': False}
   
 def list_dir (config, rdata):

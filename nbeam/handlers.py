@@ -7,7 +7,7 @@ from tornado.web import RequestHandler, StaticFileHandler, HTTPError
 from tornado.escape import json_encode, json_decode
 
 from .SimpleAES import SimpleAES
-from .views  import list_dir, open_file, save_file, rename_file, delete, new_file, new_dir, upload_file, new_url, token, token_valid
+from .views  import list_dir, open_file, save_file, rename_file, delete, new_file, new_dir, upload_file, new_url, token, token_valid, create_realtime, stop_realtime
 from .views_search import start_search, start_replace, job_status, cancel_job
 from .version import VERSION_STRING
 
@@ -39,6 +39,8 @@ class MainHandler (RequestHandler):
       'jobstatus': job_status,
       'canceljob': cancel_job,
       'token': token,
+      'createRealtime': create_realtime,
+      'stopRealtime': stop_realtime,
     }
     
     super(MainHandler, self).__init__(*args, **kwargs)

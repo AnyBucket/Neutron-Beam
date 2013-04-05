@@ -44,6 +44,7 @@ def run_server (config):
   dbObj = initialize_db(config['db'])
   config['Job'] = dbObj['JobModel']
   config['CancelJob'] = dbObj['CancelModel']
+  config['File'] = dbObj['File']
   
   q = multiprocessing.Queue()
   config['q'] = q

@@ -21,6 +21,16 @@ def initialize_db (db_path):
   DB = peewee.SqliteDatabase(db_path)
   DB.connect()
   
+  class File (peewee.Model):
+    path = peewee.CharField(max_length=1024)
+    realtime_id = peewee.CharField(max_length=255, null=True, default=None)
+    
+    def __unicode__ (self):
+      return os.path.basename(self.path)
+      
+    class Meta:
+      database = DB
+      
   class Job (peewee.Model):
     jtype = peewee.CharField(max_length=25, choices=JOB_TYPES)
     email = peewee.CharField(max_length=255)
@@ -65,10 +75,12 @@ def initialize_db (db_path):
       
   Job.create_table(True)
   CancelJob.create_table(True)
+  File.create_table(True)
   
   return {
     'db': DB,
     'JobModel': Job,
     'CancelModel': CancelJob,
+    'File': File,
   }
   
