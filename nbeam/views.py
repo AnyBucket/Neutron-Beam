@@ -217,7 +217,7 @@ def open_file (config, rdata):
   return {'file': f, 'read_only': False}
   
 def list_dir (config, rdata):
-  show_hidden = False
+  show_hidden = rdata['show_hidden']
   r = ['<ul class="jqueryFileTree" style="display: none;">']
   d = config['dir'] + rdata['dir']
   fdlist = os.listdir(d)
