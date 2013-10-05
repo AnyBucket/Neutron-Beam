@@ -151,6 +151,8 @@ def commander ():
   parser.add_argument('-f', dest='foreground', action='store_true', default=False, help='Run in the foreground instead of a daemon.')
   parser.add_argument('-r', dest='reload', action='store_true', default=False, help='Reload on code changes. (For Debugging)')
   parser.add_argument('-v', '--view', dest='view', type=int, default=None, help='File view session timeout in minutes. Default: 30')
+  parser.add_argument('--email', dest='email', default=None, help='Set email for automated installation.')
+  parser.add_argument('--code', dest='code', default=None, help='Set code directory for automated installation.')
   
   args = parser.parse_args()
   
@@ -170,14 +172,21 @@ def commander ():
     config['view_timeout'] = args.view
     
   if not config['email']:
-    config['email'] = raw_input('E-Mail Address: ')
-    
-    fh = open(cpath, 'w')
-    json.dump(config, fh, sort_keys=True, indent=2)
-    fh.close()
+    if args.email:
+      config['email'] = args.email
+      
+    else:
+      config['email'] = raw_input('E-Mail Address: ')
+      
+    dump_config (cpath, config)
     
   if not config['dir']:
-    config['dir'] = raw_input('Enter your code directory: ')
+    if args.code:
+      config['dir'] = args.code
+      
+    else:
+      config['dir'] = raw_input('Enter your code directory: ')
+      
     if not os.path.exists(config['dir']):
       os.makedirs(config['dir'])
       
