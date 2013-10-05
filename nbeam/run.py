@@ -143,9 +143,9 @@ def commander ():
   if os.environ.has_key('HOME'):
     config_default = os.path.join(os.environ['HOME'], '.config', 'nbeam')
     
-  cmd_help = "start, stop, restart, status, config (print config), newkey (generate new key)"
+  cmd_help = "start, stop, restart, status, config (print config), newkey (generate new key), json (print json config only)"
   parser = argparse.ArgumentParser(description='Neutron Beam, client to access local files in Neutron Drive.')
-  parser.add_argument('command', metavar='command', nargs=1, choices=('start', 'stop', 'restart', 'status', 'config', 'newkey'), help=cmd_help)
+  parser.add_argument('command', metavar='command', nargs=1, choices=('start', 'stop', 'restart', 'status', 'config', 'newkey', 'json'), help=cmd_help)
   parser.add_argument('-c', '--config', dest='config', default=config_default, help='Config directory path, default: ' + config_default)
   parser.add_argument('-p', '--port', dest='port', type=int, default=None, help='Network port to run client on. Default: 32811')
   parser.add_argument('-f', dest='foreground', action='store_true', default=False, help='Run in the foreground instead of a daemon.')
@@ -221,6 +221,10 @@ def commander ():
   if args.command[0] == 'config':
     print 'Config Directory: %s' % args.config
     print 'Config File: %s' % cpath
+    print json.dumps(config, sort_keys=True, indent=2)
+    return 0
+    
+  if args.command[0] == 'json':
     print json.dumps(config, sort_keys=True, indent=2)
     return 0
     
